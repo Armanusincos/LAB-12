@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Вход с JWT</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f2f2f2;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #app {
+        background: white;
+        padding: 30px;
+        width: 380px;
+        border-radius: 12px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 15px;
+        box-sizing: border-box;
+    }
+
+    .password-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .toggle-pass {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        font-size: 20px;
+        user-select: none;
+    }
+
+    .btn {
+        background: #0e6b37;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        width: 100%;
+        cursor: pointer;
+        border-radius: 6px;
+        margin-top: 12px;
+        font-size: 17px;
+    }
+
+    .btn:hover {
+        background: #0a522a;
+    }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+
+function generateFakeJWT(email) {
+    const header = btoa(JSON.stringify({alg: "HS256", typ: "JWT"}));
+    const payload = btoa(JSON.stringify({email: email, time: Date.now()}));
+    const signature = btoa("fake-signature");
+    return `${header}.${payload}.${signature}`;
+}
+
+
+function renderApp() {
+    const app = document.getElementById("app");
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+
+        app.innerHTML = `
+            <h2>Вход</h2>
+            <input type="email" id="email" placeholder="E-mail">
+
+            <div class="password-wrapper">
+                <input type="password" id="password" placeholder="Пароль">
+                <span class="toggle-pass" onclick="togglePassword()">👁️</span>
+            </div>
+
+            <button class="btn" onclick="login()">Войти</button>
+        `;
+    } else {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        app.innerHTML = `
+            <h2>Вы вошли как:</h2>
+            <p><b>${payload.email}</b></p>
+            <button class="btn" onclick="logout()">Выйти</button>
+        `;
+    }
+}
+
+
+function login() {
+    const email = document.getElementById("email").value;
+    const pass  = document.getElementById("password").value;
+
+    if (email.trim() === "" || pass.trim() === "") {
+        alert("Введите email и пароль!");
+        return;
+    }
+
+    const token = generateFakeJWT(email);
+    localStorage.setItem("token", token);
+    renderApp();
+}
+
+function logout() {
+    localStorage.removeItem("token");
+    renderApp();
+}
+
+
+function togglePassword() {
+    const passField = document.getElementById("password");
+    passField.type = passField.type === "password" ? "text" : "password";
+}
+
+
+renderApp();
+</script>
+
+</body>
+</html>
